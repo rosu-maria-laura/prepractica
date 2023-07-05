@@ -1,11 +1,4 @@
 char WARNING_MESSAGE[] =\
-"\n-------------------------------------------------------------------\n"\
-"WARNING: This example is suitable for rechargeable batteries only.\n"\
-"Non-rechargeable batteries always show a plain discharge curve,\n"\
-"so it is not possible to know how much power is left.\n"
-"-------------------------------------------------------------------\n";
- 
- 
 void setup()
 {
   // Open the USB connection
@@ -15,8 +8,6 @@ void setup()
   // show warning
   USB.println( WARNING_MESSAGE );
 }
-
-
 
 void loop()
 {
