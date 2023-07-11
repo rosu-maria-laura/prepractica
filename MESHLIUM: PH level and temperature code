@@ -1,0 +1,150 @@
+
+// Put your libraries here (#include ...)
+#include <WaspWIFI_PRO_V3.h>
+#include <WaspFrame.h>
+#include <smartWaterIons.h>
+
+
+// choose socket (SELECT USER'S SOCKET)
+///////////////////////////////////////
+uint8_t socket = SOCKET0;
+ionSensorClass pHSensor(SOCKET_A);
+pt1000Class tempSensor;
+///////////////////////////////////////
+// Calibration values for pH sensor
+//======================================================================
+#define cal_point_10 1.405
+#define cal_point_7  2.048
+#define cal_point_4 2.687
+#define cal_temperature 22.0
+
+ //Define the number of calibration points
+//======================================================================
+#define NUM_POINTS 3
+// choose HTTP server settings
+///////////////////////////////////////
+char type[] = "http";
+char host[] = "82.78.81.178";
+uint16_t port = 80;
+///////////////////////////////////////
+
+uint8_t error;
+uint8_t status;
+
+// define the Waspmote ID 
+char moteID[] = "PH_LAURA";
+
+void setup()
+{
+  // Turn ON the Smart Water Ions Board and USB
+  SWIonsBoard.ON();
+  USB.ON();
+  
+  USB.println(F("Start program"));
+
+  USB.println(F("***************************************"));
+  USB.println(F("It is assumed the module was previously"));
+  USB.println(F("configured in autoconnect mode and with"));
+  USB.println(F("the Meshlium AP settings."));
+  USB.println(F("Once the module is configured with the"));
+  USB.println(F("AP settings, it attempts to join the AP"));
+  USB.println(F("automatically once it is powered on"));
+  USB.println(F("Refer to example 'WIFI_02' to configure"));
+  USB.println(F("the WiFi module with proper settings"));
+  USB.println(F("***************************************"));
+
+  // set the Waspmote ID
+  frame.setID(moteID);  
+  // Calibrate the pH sensor
+  pHSensor.setpHCalibrationPoints(cal_point_10, cal_point_7, cal_point_4, cal_temperature);
+
+}
+
+
+
+void loop()
+{
+  
+  //////////////////////////////////////////////////
+  // 1. Switch ON
+  //////////////////////////////////////////////////  
+    SWIonsBoard.ON();
+  delay(2000); 
+  error = WIFI_PRO_V3.ON(socket);
+
+  if (error == 0)
+  {    
+    USB.println(F("WiFi switched ON"));
+  }
+  else
+  {
+    USB.println(F("WiFi did not initialize correctly"));
+  }
+
+  // check connectivity
+  status =  WIFI_PRO_V3.isConnected();
+
+  // check if module is connected
+  if (status == true)
+  {
+    ///////////////////////////////
+    // Read the pH sensor
+  float pHVolts = pHSensor.read();
+  float tempValue = tempSensor.read();
+  float pHValue = pHSensor.pHConversion(pHVolts, tempValue);
+  
+  delay(500);
+
+  ///////////////////////////////////////////
+  // 3. Turn off the sensors
+  ///////////////////////////////////////////
+
+  SWIonsBoard.OFF(); 
+    // 3.1. Create a new Frame 
+    ///////////////////////////////
+    
+    // create new frame (only ASCII)
+    frame.createFrame(ASCII); 
+
+    // add sensor fields
+  //  frame.addSensor(SENSOR_STR, "this_is_a_string");
+   // frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
+ frame.addSensor(SENSOR_IONS_PH, pHValue);
+ frame.addSensor(SENSOR_IONS_WT, tempValue);
+    // print frame
+    frame.showFrame();  
+  delay(2000);
+
+    ///////////////////////////////
+    // 3.2. Send Frame to Meshlium
+    ///////////////////////////////
+
+    // http frame
+    error = WIFI_PRO_V3.sendFrameToMeshlium( type, host, port, frame.buffer, frame.length);
+
+    // check response
+    if (error == 0)
+    {
+      USB.println(F("Send frame to meshlium done"));
+    }
+    else
+    {
+      USB.println(F("Error sending frame"));
+      if (WIFI_PRO_V3._httpResponseStatus)
+      {
+        USB.print(F("HTTP response status: "));  
+        USB.println(WIFI_PRO_V3._httpResponseStatus);  
+      }
+    }
+  }
+  else
+  {
+    USB.print(F("2. WiFi is connected ERROR"));
+  }
+  //////////////////////////////////////////////////
+  // 3. Switch OFF
+  //////////////////////////////////////////////////  
+  WIFI_PRO_V3.OFF(socket);
+  USB.println(F("WiFi switched OFF\n\n")); 
+  delay(10000);
+}
