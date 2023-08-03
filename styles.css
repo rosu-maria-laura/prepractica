@@ -1,0 +1,28 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-image: url("background.jpg"); /* Replace "background.jpg" with your image file path */
+    background-size: cover;
+    background-position: center;
+}
+
+/* Add the rest of the CSS styles as before */
+h1 {
+    margin-bottom: 20px;
+}
+
+input {
+    width: 200px;
+    padding: 5px;
+    margin-right: 10px;
+}
+
+button {
+    padding: 5px 10px;
+}
+
+#temperatureResult {
+    margin-top: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
