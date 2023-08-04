@@ -1,0 +1,6 @@
+# List files or directories to ignore during the Docker image build process
+# Add any other files or directories that should not be included in the image
+
+# Example: Ignore node_modules if it's not needed in the image
+node_modules
+
